@@ -1,6 +1,10 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-
+from dotenv import load_dotenv, find_dotenv
+import json
+import os
+from openai import OpenAI
+import numpy as np
 from .models import Movie
 
 import matplotlib.pyplot as plt
@@ -23,6 +27,43 @@ def home(request):
 def about(request):
     #return HttpResponse('<h1>Welcome to About Page</h1>')
     return render(request, 'about.html')
+
+def recommendations(request):
+    searchRecommendation = request.GET.get('searchRecommendation')
+    with open(r'C:\Users\Salinas\Documents\GitHub\NAX\Taller3-PI1\movie_descriptions_embeddings.json', 'r') as file:
+        file_content = file.read()
+        movies = json.loads(file_content)
+    if searchRecommendation:
+        load_dotenv(dotenv_path=r'C:\Users\Salinas\Documents\GitHub\NAX\Taller3-PI1\openAI.env')  # Especifica la ruta completa del archivo .env
+
+        openai_api_key = os.getenv('OPENAI_API_KEY')
+
+        if openai_api_key is None:
+            raise ValueError("La variable de entorno OPENAI_API_KEY no está configurada")
+
+        client = OpenAI(api_key=openai_api_key)
+
+        def get_embedding(text, model="text-embedding-3-small"):
+            text = text.replace("\n", " ")
+            return client.embeddings.create(input = [text], model=model).data[0].embedding
+
+        def cosine_similarity(a, b):
+                return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+
+        req = searchRecommendation
+        emb = get_embedding(req)
+
+        sim = []
+        for i in range(len(movies)):
+            sim.append(cosine_similarity(emb,movies[i]['embedding']))
+        sim = np.array(sim)
+        idx = np.argmax(sim)
+        movies1 = (movies[idx]['title'])
+        movie = Movie.objects.filter(title__icontains=movies1).first()
+        print(movie)
+    else:
+        movie  = Movie.objects.all()
+    return render(request, "recommendations.html", {"searchRecommendation": searchRecommendation, 'movie':movie})
 
 def signup(request):
     email = request.GET.get('email') 
