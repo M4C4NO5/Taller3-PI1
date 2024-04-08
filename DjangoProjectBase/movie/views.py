@@ -34,7 +34,7 @@ def recommendations(request):
         file_content = file.read()
         movies = json.loads(file_content)
     if searchRecommendation:
-        load_dotenv(dotenv_path=r'C:\Users\Salinas\Documents\GitHub\NAX\Taller3-PI1\openAI.env')  # Especifica la ruta completa del archivo .env
+        load_dotenv(dotenv_path=r'C:\Users\Salinas\Documents\GitHub\NAX\Taller3-PI1\DjangoProjectBase\movie\openAI.env')  # Especifica la ruta completa del archivo .env
 
         openai_api_key = os.getenv('OPENAI_API_KEY')
 
